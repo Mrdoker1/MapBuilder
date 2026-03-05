@@ -93,46 +93,47 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #ffffff;
+  background: rgba(255, 255, 255, 1);
   border: none;
   border-radius: 999px;
-  padding: 7px 14px 7px 7px;
+  padding: 5px 12px 5px 5px;
   white-space: nowrap;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
   transition: transform 0.15s;
 }
 
-/* No label — just the flag circle, equal padding all around */
+/* No label — icon only, equal padding */
 .flag-box--icon {
-  padding: 5px;
+  padding: 3px;
+  border-radius: 8px;
 }
 
 .flag-marker:hover .flag-box {
   transform: scale(1.07);
 }
 
-.flag-circle {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
+.flag-rect {
+  width: 42px;
+  height: 28px;
+  border-radius: 4px;
   overflow: hidden;
   flex-shrink: 0;
-  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.flag-circle--sm {
-  width: 24px;
-  height: 24px;
+.flag-rect--sm {
+  width: 30px;
+  height: 20px;
 }
 
-/* Square (non-rounded) variants */
-.flag-circle--square {
-  border-radius: 4px;
+/* Default (roundedFlags=false): standard rectangle */
+.flag-rect--square {
+  border-radius: 3px;
 }
 
+/* Square flag-box variant */
 .flag-box--square {
   border-radius: 6px;
 }
@@ -157,7 +158,7 @@
 /* Pole – starts below the tail tip */
 .flag-pole {
   width: 2px;
-  height: 24px;
+  height: 14px;
   margin-top: 0;
   background: linear-gradient(
     to bottom,
@@ -169,11 +170,38 @@
 
 /* Dot at the bottom of the pole */
 .flag-dot {
-  width: 7px;
-  height: 7px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
+}
+
+/* ── Info panel (Russia) ── */
+.info-panel {
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 16px 22px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+  max-width: 260px;
+  pointer-events: none;
+}
+
+.info-panel__title {
+  font-family: var(--app-font, system-ui, sans-serif);
+  font-size: 18px;
+  font-weight: 600;
+  color: #111111;
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.info-panel__subtitle {
+  font-family: var(--app-font, system-ui, sans-serif);
+  font-size: 13px;
+  font-weight: 400;
+  color: #555555;
+  line-height: 1.4;
 }
 
 /* ── Mapbox attribution & nav placement ── */

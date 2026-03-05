@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import * as Flags from 'country-flag-icons/react/1x1';
+import * as Flags from 'country-flag-icons/react/3x2';
 import './MapSection.css';
 
 mapboxgl.accessToken =
@@ -12,7 +12,7 @@ const BRAND_COLOR = '#04882C';
 
 // Countries to highlight
 const COUNTRIES = [
-  { iso: 'RU', name: 'Россия',            label: 'Россия',       blob: 'xl', center: [97,   60  ] },
+  { iso: 'RU', name: 'Россия',            label: 'GETTZAP - BTAP', blob: 'xl', center: [37.6, 55.75] },
   { iso: 'CN', name: 'Китай',             label: 'Производство',  blob: 'xl', center: [104,  35  ] },
   { iso: 'TR', name: 'Турция',            label: null,            blob: 'md', center: [35,   39  ] },
   { iso: 'IN', name: 'Индия',             label: null,            blob: 'md', center: [78,   22  ] },
@@ -44,11 +44,11 @@ function BlobMarker({ size }) {
 function FlagMarker({ country, settings }) {
   const FlagSvg = Flags[country.iso];
   const rounded = settings?.roundedFlags ?? true;
-  const circleClass = `flag-circle${country.label ? '' : ' flag-circle--sm'}${rounded ? '' : ' flag-circle--square'}`;
+  const rectClass = `flag-rect${country.label ? '' : ' flag-rect--sm'}${rounded ? '' : ' flag-rect--square'}`;
   return (
     <div className="flag-marker">
       <div className={`flag-box${country.label ? '' : ' flag-box--icon'}${rounded ? '' : ' flag-box--square'}`}>
-        <div className={circleClass}>
+        <div className={rectClass}>
           {FlagSvg
             ? <FlagSvg className="flag-svg" />
             : <span style={{ fontSize: 13 }}>{country.iso}</span>
@@ -58,6 +58,15 @@ function FlagMarker({ country, settings }) {
       </div>
       <div className="flag-pole" />
       <div className="flag-dot" />
+    </div>
+  );
+}
+
+function InfoPanel({ title, subtitle }) {
+  return (
+    <div className="info-panel">
+      <div className="info-panel__title">{title}</div>
+      <div className="info-panel__subtitle">{subtitle}</div>
     </div>
   );
 }
@@ -136,6 +145,21 @@ export default function MapSection({ settings }) {
           'line-opacity': 1,
         },
       });
+
+      // ── Info panel over Russia ──
+      {
+        const wrapper = document.createElement('div');
+        const root = createRoot(wrapper);
+        root.render(
+          <InfoPanel
+            title="Gettzap LLC - Россия"
+            subtitle="Эксклюзивный дистрибьютер на территории Российской Федерации"
+          />
+        );
+        new mapboxgl.Marker({ element: wrapper, anchor: 'center' })
+          .setLngLat([97, 62])
+          .addTo(m);
+      }
 
       // ── Flag markers + blob markers ──
       for (const country of COUNTRIES) {
