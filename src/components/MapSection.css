@@ -95,8 +95,8 @@
   gap: 8px;
   background: rgba(255, 255, 255, 1);
   border: none;
-  border-radius: 999px;
-  padding: 5px 12px 5px 5px;
+  border-radius: 6px;
+  padding: 3px 8px 3px 3px;
   white-space: nowrap;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
   transition: transform 0.15s;
@@ -104,8 +104,8 @@
 
 /* No label — icon only, equal padding */
 .flag-box--icon {
-  padding: 3px;
-  border-radius: 8px;
+  padding: 2px;
+  border-radius: 4px;
 }
 
 .flag-marker:hover .flag-box {
@@ -115,7 +115,7 @@
 .flag-rect {
   width: 42px;
   height: 28px;
-  border-radius: 4px;
+  border-radius: 2px;
   overflow: hidden;
   flex-shrink: 0;
   display: flex;
@@ -128,12 +128,15 @@
   height: 20px;
 }
 
-/* Default (roundedFlags=false): standard rectangle */
-.flag-rect--square {
-  border-radius: 3px;
+.flag-rect--rounded {
+  border-radius: 999px;
 }
 
-/* Square flag-box variant */
+/* Rounded flag-box variant */
+.flag-box--rounded {
+  border-radius: 999px;
+}
+
 .flag-box--square {
   border-radius: 6px;
 }

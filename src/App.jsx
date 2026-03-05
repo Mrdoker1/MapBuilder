@@ -144,7 +144,7 @@ export default function App() {
           </Badge>
 
           <Switch
-            label="Пульсирующие блобы"
+            label="Блобы"
             description="Анимированные блобы у ключевых стран (Россия, Китай, Германия)"
             checked={settings.showBlobs}
             onChange={() => toggle('showBlobs')}

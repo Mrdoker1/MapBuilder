@@ -44,10 +44,12 @@ function BlobMarker({ size }) {
 function FlagMarker({ country, settings }) {
   const FlagSvg = Flags[country.iso];
   const rounded = settings?.roundedFlags ?? true;
-  const rectClass = `flag-rect${country.label ? '' : ' flag-rect--sm'}${rounded ? '' : ' flag-rect--square'}`;
+  const rectClass = `flag-rect${country.label ? '' : ' flag-rect--sm'}${rounded ? ' flag-rect--rounded' : ''}`;
+  const boxClass = `flag-box${country.label ? '' : ' flag-box--icon'}${rounded ? ' flag-box--rounded' : ''}`;
+  const showBlobs = settings?.showBlobs ?? true;
   return (
     <div className="flag-marker">
-      <div className={`flag-box${country.label ? '' : ' flag-box--icon'}${rounded ? '' : ' flag-box--square'}`}>
+      <div className={boxClass}>
         <div className={rectClass}>
           {FlagSvg
             ? <FlagSvg className="flag-svg" />
@@ -56,8 +58,8 @@ function FlagMarker({ country, settings }) {
         </div>
         {country.label && <span className="flag-label">{country.label}</span>}
       </div>
-      <div className="flag-pole" />
-      <div className="flag-dot" />
+      {showBlobs && <div className="flag-pole" />}
+      {showBlobs && <div className="flag-dot" />}
     </div>
   );
 }
