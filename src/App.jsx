@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { MantineProvider, Modal, Switch, Stack, Text, Divider, Badge, Select } from '@mantine/core';
+import { useState, useEffect, useRef } from 'react';
+import { MantineProvider, Modal, Switch, Stack, Text, Divider, Badge, Select, Button } from '@mantine/core';
 import '@mantine/core/styles.css';
 import MapSection from './components/MapSection';
 
@@ -28,8 +28,9 @@ const FONT_OPTIONS = [
 
 const DEFAULT_SETTINGS = {
   roundedFlags: false,
-  showBlobs: true,
   font: 'Neo Sans Pro',
+  zoomLocked: true,
+  showBlobs: false,
 };
 
 function loadSettings() {
@@ -54,6 +55,40 @@ function loadGoogleFont(family) {
 export default function App() {
   const [settings, setSettings] = useState(loadSettings);
   const [opened, setOpened] = useState(false);
+  const importInputRef = useRef(null);
+
+  function exportConfig() {
+    const data = {
+      settings: JSON.parse(localStorage.getItem('mapSettings') || '{}'),
+      positions: JSON.parse(localStorage.getItem('mapFlagPositions') || '{}'),
+      view: JSON.parse(localStorage.getItem('mapView') || 'null'),
+      attached: JSON.parse(localStorage.getItem('mapLabelAttached') || '{}'),
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'map-config.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function importConfig(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (data.settings)  localStorage.setItem('mapSettings',      JSON.stringify(data.settings));
+        if (data.positions) localStorage.setItem('mapFlagPositions', JSON.stringify(data.positions));
+        if (data.view)      localStorage.setItem('mapView',          JSON.stringify(data.view));
+        if (data.attached)  localStorage.setItem('mapLabelAttached', JSON.stringify(data.attached));
+        window.location.reload();
+      } catch { alert('Неверный формат файла'); }
+    };
+    reader.readAsText(file);
+  }
 
   // Persist settings to localStorage on every change
   useEffect(() => {
@@ -140,14 +175,14 @@ export default function App() {
           <Divider color="rgba(255,255,255,0.08)" />
 
           <Badge color="green" variant="light" size="sm" w="fit-content">
-            Анимация
+            Навигация
           </Badge>
 
           <Switch
-            label="Блобы"
-            description="Анимированные блобы у ключевых стран (Россия, Китай, Германия)"
-            checked={settings.showBlobs}
-            onChange={() => toggle('showBlobs')}
+            label="Режим презентации"
+            description="Блокирует зум, перемещение карты и перетаскивание флагов"
+            checked={settings.zoomLocked}
+            onChange={() => toggle('zoomLocked')}
             color="green"
             styles={{
               label: { color: '#e0e0e0', fontWeight: 600 },
@@ -157,6 +192,49 @@ export default function App() {
         </Stack>
 
         <Divider mt="lg" mb="sm" color="rgba(255,255,255,0.08)" />
+
+        <Badge color="blue" variant="light" size="sm" w="fit-content" mb="xs">
+          Конфигурация
+        </Badge>
+
+        <Stack gap="xs">
+          <Button
+            variant="light"
+            color="green"
+            size="xs"
+            fullWidth
+            onClick={exportConfig}
+          >
+            Экспортировать настройки (JSON)
+          </Button>
+
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".json"
+            style={{ display: 'none' }}
+            onChange={importConfig}
+          />
+          <Button
+            variant="light"
+            color="blue"
+            size="xs"
+            fullWidth
+            onClick={() => importInputRef.current?.click()}
+          >
+            Импортировать настройки
+          </Button>
+
+          <Button
+            variant="subtle"
+            color="red"
+            size="xs"
+            fullWidth
+            onClick={() => { localStorage.removeItem('mapFlagPositions'); localStorage.removeItem('mapView'); localStorage.removeItem('mapLabelAttached'); window.location.reload(); }}
+          >
+            Сбросить позиции флагов
+          </Button>
+        </Stack>
         <Text size="xs" c="dimmed" ta="center">
           Нажмите{' '}
           <kbd style={{ background: 'rgba(255,255,255,0.1)', padding: '1px 6px', borderRadius: 4, color: '#fff' }}>

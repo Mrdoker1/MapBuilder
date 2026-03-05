@@ -17,6 +17,14 @@
   height: 100%;
 }
 
+.map-lock-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  cursor: default;
+  background: transparent;
+}
+
 /* ──────────────────────────────────────
    Blob / pulse markers
 ────────────────────────────────────── */
@@ -78,116 +86,90 @@
 }
 
 /* ──────────────────────────────────────
-   Flag markers on poles
+   Flag markers
 ────────────────────────────────────── */
-.flag-marker {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-}
 
-/* Tooltip bubble */
-.flag-box {
+/* Outer wrapper — carries data-name for the drag tooltip */
+.flag-marker-wrapper {
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 1);
-  border: none;
-  border-radius: 6px;
-  padding: 3px 8px 3px 3px;
+  display: inline-flex;
+}
+.flag-marker-wrapper.is-dragging::after {
+  content: attr(data-name);
+  position: absolute;
+  bottom: 65px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10, 10, 10, 0.82);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--app-font, 'Inter', sans-serif);
+  padding: 4px 10px;
+  border-radius: 8px;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
-  transition: transform 0.15s;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  letter-spacing: 0.02em;
 }
 
-/* No label — icon only, equal padding */
-.flag-box--icon {
-  padding: 2px;
-  border-radius: 4px;
-}
-
-.flag-marker:hover .flag-box {
-  transform: scale(1.07);
-}
-
-.flag-rect {
-  width: 42px;
-  height: 28px;
-  border-radius: 2px;
-  overflow: hidden;
+/* Square flag component — Mapbox anchor:center pins geo-coord to icon centre */
+.flag-marker {
+  position: relative;
+  /* width + height set via inline style to exact pole dimensions */
+  overflow: visible;   /* flag image and label extend beyond the 14px box */
+  cursor: grab;
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+}
+.flag-marker:active { cursor: grabbing; }
+
+/* Vertical pole — centred in the 14px wrapper: left = (14 - 3) / 2 = 5.5px */
+.flagpole-stem {
+  position: absolute;
+  left: 5.5px;
+  top: 0;
+  width: 3px;
+  border-radius: 2px;
+  background: linear-gradient(to right, #b0b0b0, #e8e8e8, #a0a0a0);
+  box-shadow: 1px 0 2px rgba(0,0,0,0.25);
+  z-index: 2;
 }
 
-.flag-rect--sm {
-  width: 30px;
-  height: 20px;
-}
-
-.flag-rect--rounded {
-  border-radius: 999px;
-}
-
-/* Rounded flag-box variant */
-.flag-box--rounded {
-  border-radius: 999px;
-}
-
-.flag-box--square {
-  border-radius: 6px;
-}
-
-.flag-svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-.flag-label {
-  font-size: 13px;
-  font-weight: 500;
-  color: #111111;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  font-family: var(--app-font, system-ui, sans-serif);
-  line-height: 1;
-  transform: translateY(0.1em);
-}
-
-/* Pole – starts below the tail tip */
-.flag-pole {
-  width: 2px;
-  height: 14px;
-  margin-top: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(255,255,255,0.9),
-    rgba(255,255,255,0.2)
-  );
-  border-radius: 1px;
-}
-
-/* Dot at the bottom of the pole */
-.flag-dot {
-  width: 5px;
-  height: 5px;
+/* Ball at top — centre: left = (14 - 9) / 2 = 2.5px */
+.flagpole-ball {
+  position: absolute;
+  left: 2.5px;
+  top: -5px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
+  background: radial-gradient(circle at 35% 35%, #e8e8e8, #888);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  z-index: 3;
+}
+
+/* Flag emoji — hangs to the right of the pole top */
+.flagpole-flag {
+  position: absolute;
+  left: 7px;    /* starts at pole centre */
+  top: -5px;
+  display: block;
+  z-index: 1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
 }
 
 /* ── Info panel (Russia) ── */
 .info-panel {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(4px);
   border-radius: 6px;
   padding: 16px 22px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
   max-width: 260px;
-  pointer-events: none;
+  cursor: grab;
+}
+.info-panel:active {
+  cursor: grabbing;
 }
 
 .info-panel__title {
@@ -206,6 +188,29 @@
   color: #555555;
   line-height: 1.4;
 }
+
+/* ── Label panel (draggable text badge for key countries) ── */
+.label-panel {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(4px);
+  border-radius: 6px;
+  padding: 8px 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
+  cursor: grab;
+  user-select: none;
+}
+.label-panel:active {
+  cursor: grabbing;
+}
+.label-panel__text {
+  font-family: var(--app-font, system-ui, sans-serif);
+  font-size: 13px;
+  font-weight: 500;
+  color: #333333;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
 
 /* ── Mapbox attribution & nav placement ── */
 .mapboxgl-ctrl-bottom-right {
