@@ -1,0 +1,183 @@
+/* ──────────────────────────────────────
+   Map Section – full viewport layout
+────────────────────────────────────── */
+.map-section {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+/* ── Map fills the whole section ── */
+.map-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ──────────────────────────────────────
+   Blob / pulse markers
+────────────────────────────────────── */
+.blob {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* Size variants */
+.blob-sm  { width: 20px; height: 20px; }
+.blob-md  { width: 30px; height: 30px; }
+.blob-xl  { width: 52px; height: 52px; }
+
+/* Solid inner dot */
+.blob-core {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  z-index: 2;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
+.blob-sm  .blob-core { width: 8px;  height: 8px;  }
+.blob-md  .blob-core { width: 12px; height: 12px; }
+.blob-xl  .blob-core { width: 18px; height: 18px; }
+
+/* Pulsing rings */
+.blob-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  opacity: 0;
+  animation: blob-pulse 2.4s ease-out infinite;
+}
+.blob-ring-2 {
+  animation-delay: 1.2s;
+}
+
+@keyframes blob-pulse {
+  0%   { transform: scale(0.4); opacity: 0.75; }
+  100% { transform: scale(1.8); opacity: 0;   }
+}
+
+/* Bigger rings for xl */
+.blob-xl .blob-ring {
+  border-width: 2.5px;
+  animation: blob-pulse-xl 2.6s ease-out infinite;
+}
+.blob-xl .blob-ring-2 { animation-delay: 1.3s; }
+
+@keyframes blob-pulse-xl {
+  0%   { transform: scale(0.35); opacity: 0.8; }
+  100% { transform: scale(2.0);  opacity: 0;    }
+}
+
+/* ──────────────────────────────────────
+   Flag markers on poles
+────────────────────────────────────── */
+.flag-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* Tooltip bubble */
+.flag-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border: none;
+  border-radius: 999px;
+  padding: 7px 14px 7px 7px;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
+  transition: transform 0.15s;
+}
+
+/* No label — just the flag circle, equal padding all around */
+.flag-box--icon {
+  padding: 5px;
+}
+
+.flag-marker:hover .flag-box {
+  transform: scale(1.07);
+}
+
+.flag-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flag-circle--sm {
+  width: 24px;
+  height: 24px;
+}
+
+/* Square (non-rounded) variants */
+.flag-circle--square {
+  border-radius: 4px;
+}
+
+.flag-box--square {
+  border-radius: 6px;
+}
+
+.flag-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.flag-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #111111;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-family: var(--app-font, system-ui, sans-serif);
+  line-height: 1;
+  transform: translateY(0.1em);
+}
+
+/* Pole – starts below the tail tip */
+.flag-pole {
+  width: 2px;
+  height: 24px;
+  margin-top: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.9),
+    rgba(255,255,255,0.2)
+  );
+  border-radius: 1px;
+}
+
+/* Dot at the bottom of the pole */
+.flag-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+}
+
+/* ── Mapbox attribution & nav placement ── */
+.mapboxgl-ctrl-bottom-right {
+  right: 10px !important;
+  bottom: 10px !important;
+}
