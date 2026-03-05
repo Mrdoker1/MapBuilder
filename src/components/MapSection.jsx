@@ -95,27 +95,33 @@ export default function MapSection({ settings }) {
       projection: 'mercator',
     });
 
-    map.current.on('load', () => {
+    map.current.on('load', async () => {
       const m = map.current;
 
-      // ── Country boundary source (Mapbox tileset) ──
-      m.addSource('country-boundaries', {
-        type: 'vector',
-        url: 'mapbox://mapbox.country-boundaries-v1',
-      });
+      // ── Country boundaries from GeoJSON (one polygon per country, no stacking) ──
+      const allIsos = new Set(COUNTRIES.map((c) => c.iso));
+      const geoRes = await fetch(
+        'https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson'
+      );
+      const geoData = await geoRes.json();
+      const filtered = {
+        type: 'FeatureCollection',
+        features: geoData.features.filter((f) => allIsos.has(f.properties['ISO3166-1-Alpha-2'])),
+      };
 
-      const allIsos = COUNTRIES.map((c) => c.iso);
+      m.addSource('country-boundaries', {
+        type: 'geojson',
+        data: filtered,
+      });
 
       // Fill
       m.addLayer({
         id: 'brand-countries-fill',
         type: 'fill',
         source: 'country-boundaries',
-        'source-layer': 'country_boundaries',
-        filter: ['in', 'iso_3166_1', ...allIsos],
         paint: {
           'fill-color': BRAND_COLOR,
-          'fill-opacity': 0.45,
+          'fill-opacity': 0.4,
         },
       });
 
@@ -124,8 +130,6 @@ export default function MapSection({ settings }) {
         id: 'brand-countries-line',
         type: 'line',
         source: 'country-boundaries',
-        'source-layer': 'country_boundaries',
-        filter: ['in', 'iso_3166_1', ...allIsos],
         paint: {
           'line-color': BRAND_COLOR,
           'line-width': 2,

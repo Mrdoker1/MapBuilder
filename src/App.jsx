@@ -27,10 +27,19 @@ const FONT_OPTIONS = [
 ];
 
 const DEFAULT_SETTINGS = {
-  roundedFlags: true,
+  roundedFlags: false,
   showBlobs: true,
-  font: 'Inter',
+  font: 'Neo Sans Pro',
 };
+
+function loadSettings() {
+  try {
+    const saved = localStorage.getItem('mapSettings');
+    return saved ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved) } : DEFAULT_SETTINGS;
+  } catch {
+    return DEFAULT_SETTINGS;
+  }
+}
 
 function loadGoogleFont(family) {
   const id = `gfont-${family.replace(/\s+/g, '-')}`;
@@ -43,8 +52,13 @@ function loadGoogleFont(family) {
 }
 
 export default function App() {
-  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState(loadSettings);
   const [opened, setOpened] = useState(false);
+
+  // Persist settings to localStorage on every change
+  useEffect(() => {
+    localStorage.setItem('mapSettings', JSON.stringify(settings));
+  }, [settings]);
 
   // Apply font CSS variable whenever font changes
   useEffect(() => {
