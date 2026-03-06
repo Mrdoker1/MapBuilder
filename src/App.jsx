@@ -29,7 +29,7 @@ const FONT_OPTIONS = [
 const DEFAULT_SETTINGS = {
   roundedFlags: false,
   font: 'Neo Sans Pro',
-  zoomLocked: true,
+  zoomLocked: false,
   showBlobs: false,
 };
 

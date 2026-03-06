@@ -38,29 +38,29 @@ const DEFAULT_POSITIONS = {
   "TR": [29.877717026497777, 39.74091222270255],
   "DZ": [1.5560392319007406, 30.54550715172337],
   "EG": [26.28487498388168, 26.80626039044894],
-  "BD": [89.84822550324378, 24.870891286245694],
-  "IN": [76.83355980584719, 25.49304885313157],
+  "BD": [89.6164904579976, 25.840051294728326],
+  "IN": [74.81624136483242, 23.7921391102129],
   "LT": [23.056789390102722, 56.78850444020182],
-  "CN": [95.88499005318204, 38.332159455351245],
-  "__info_panel__": [96.4968993145672, 63.102343808678114],
-  "DE": [10.782798667234772, 53.781794140162475],
+  "CN": [92.39522257134144, 36.12581714086795],
+  "__info_panel__": [93.95153926976303, 63.660305446688],
+  "DE": [11.41403709670746, 53.99920535405738],
   "SA": [46.31554609717719, 26.494911681770702],
   "AE": [55.02415957928318, 24.723367602141494],
-  "LB": [35.52695561186877, 35.0950166628394],
+  "LB": [35.84289361548693, 34.64301999121646],
   "SG": [103.80189749887853, 1.46806856445464],
   "MY": [113.8637874251387, 3.467210969056765],
   "IQ": [45.45029696744399, 32.47116036226599],
   "KZ": [66.67362604514278, 51.29290820007543],
   "SY": [40.93968726036408, 37.51792531389995],
-  "RU": [46.65568624267809, 59.205275872018234],
-  "__label_RU__": [44.51673426027557, 62.70053039869356],
-  "__label_DE__": [1.5893744616615777, 56.3287243069486],
+  "RU": [45.70279907502322, 58.11079436849158],
+  "__label_RU__": [35.07598066336823, 60.12426945716962],
+  "__label_DE__": [2.721856966517123, 57.32907147096458],
   "__label_CN__": [83.06980350946509, 42.68201735212193],
 };
 
 const DEFAULT_VIEW = {
-  zoom: 2.2454470953337644,
-  center: [45.46943795808863, 33.779301882413066],
+  zoom: 2.465460946401676,
+  center: [62.72200513790429, 44.71419079252851],
 };
 
 const DEFAULT_ATTACHED = {
@@ -133,9 +133,6 @@ function buildFlagEl(country) {
   inner.className = 'flag-marker';
   inner.style.cssText = `width:14px;height:${poleH}px;position:absolute;left:-7px;bottom:0;overflow:visible;`;
 
-  const ball = document.createElement('div');
-  ball.className = 'flagpole-ball';
-
   const stem = document.createElement('div');
   stem.className = 'flagpole-stem';
   stem.style.height = `${poleH}px`;
@@ -147,7 +144,7 @@ function buildFlagEl(country) {
   img.height = flagH;
   img.draggable = false;
 
-  inner.append(ball, stem, img);
+  inner.append(stem, img);
   wrapper.appendChild(inner);
   return { wrapper };
 }
@@ -252,6 +249,9 @@ export default function MapSection({ settings }) {
         data: filtered,
       });
 
+      // Insert fill and stroke below all symbol (label) layers so place names stay on top
+      const firstSymbolId = m.getStyle().layers.find((l) => l.type === 'symbol')?.id;
+
       // Fill only — borders are drawn by the base map tiles, no jagged GeoJSON outline
       m.addLayer({
         id: 'brand-countries-fill',
@@ -262,7 +262,7 @@ export default function MapSection({ settings }) {
           'fill-opacity': 0.35,
           'fill-antialias': true,
         },
-      });
+      }, firstSymbolId);
 
       // Stroke
       m.addLayer({
@@ -274,7 +274,7 @@ export default function MapSection({ settings }) {
           'line-width': 1.5,
           'line-opacity': 0.9,
         },
-      });
+      }, firstSymbolId);
 
       // ── Info panel over Russia ──
       {
@@ -313,7 +313,13 @@ export default function MapSection({ settings }) {
         return COUNTRIES.find(c => c.iso === flagIso)?.label ? 54 : 40;
       }
 
+      function isLargeFlag(flagIso) {
+        return !!COUNTRIES.find(c => c.iso === flagIso)?.label;
+      }
+
       // Compute where label center should be relative to a flag (in geo coords)
+      // Large flags: top-right corner of label → top-left corner of flag image
+      // Small flags: old behaviour (label centred at mid-pole, to the left)
       function syncAttachedLabel(labelIso) {
         const flagIso = attachedTo[labelIso];
         if (!flagIso || !flagMarkersMap[flagIso] || !labelMarkersMap[labelIso]) return;
@@ -321,10 +327,20 @@ export default function MapSection({ settings }) {
         const fp = m.project(flagMarkersMap[flagIso].getLngLat());
         const poleH = getFlagPoleH(flagIso);
         const labelW = el.offsetWidth;
-        lm.setLngLat(m.unproject({
-          x: fp.x - labelW / 2 - ATTACH_GAP_PX,
-          y: fp.y - poleH / 2,
-        }));
+        const labelH = el.offsetHeight;
+        let x, y;
+        if (isLargeFlag(flagIso)) {
+          // right edge of label aligns with left edge of flag image (pole left = fp.x)
+          // top edge of label aligns with top of flag image (top = fp.y - poleH - 5)
+          const extraDown = flagIso === 'DE' ? 20 : flagIso === 'CN' ? 6 : 4;
+          x = fp.x - labelW / 2 - ATTACH_GAP_PX;
+          y = fp.y - poleH - 5 + labelH / 2 + extraDown;
+        } else {
+          // original positioning: label centred vertically at mid-pole
+          x = fp.x - labelW / 2 - ATTACH_GAP_PX;
+          y = fp.y - poleH / 2;
+        }
+        lm.setLngLat(m.unproject({ x, y }));
       }
 
       function attachLabelToFlag(labelIso, flagIso) {
