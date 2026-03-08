@@ -31,6 +31,7 @@ const DEFAULT_SETTINGS = {
   font: 'Neo Sans Pro',
   zoomLocked: false,
   showBlobs: false,
+  poleColor: '#444444',
 };
 
 function loadSettings() {
@@ -171,6 +172,20 @@ export default function App() {
               description: { color: 'rgba(255,255,255,0.45)', fontSize: 12 },
             }}
           />
+
+          <div>
+            <Text size="sm" fw={600} c="#e0e0e0" mb={4}>Цвет флагштока</Text>
+            <Text size="xs" c="rgba(255,255,255,0.45)" mb={6}>Выберите цвет шеста флага</Text>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <input
+                type="color"
+                value={settings.poleColor ?? '#444444'}
+                onChange={(e) => setSettings((p) => ({ ...p, poleColor: e.target.value }))}
+                style={{ width: 40, height: 32, border: 'none', borderRadius: 6, cursor: 'pointer', background: 'none', padding: 0 }}
+              />
+              <Text size="sm" c="#aaa">{settings.poleColor ?? '#444444'}</Text>
+            </div>
+          </div>
 
           <Divider color="rgba(255,255,255,0.08)" />
 

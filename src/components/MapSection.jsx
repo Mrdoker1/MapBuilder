@@ -116,7 +116,7 @@ function appleEmojiUrl(iso) {
  * exactly like the working text panels. The geo-coordinate = pole base point.
  * The visual flag is rendered via position:absolute going upward from that point.
  */
-function buildFlagEl(country) {
+function buildFlagEl(country, poleColor) {
   const large = !!country.label;
   const poleH = large ? 54 : 40;
   const flagW = large ? 44 : 32;
@@ -136,6 +136,7 @@ function buildFlagEl(country) {
   const stem = document.createElement('div');
   stem.className = 'flagpole-stem';
   stem.style.height = `${poleH}px`;
+  if (poleColor) stem.style.background = poleColor;
 
   const img = document.createElement('img');
   img.className = 'flagpole-flag';
@@ -197,6 +198,15 @@ export default function MapSection({ settings }) {
     m.keyboard.enable();
     markersRef.current.forEach(marker => marker.setDraggable(!locked));
   }, [settings?.zoomLocked]);
+
+  // Live-update pole color without rebuilding markers
+  useEffect(() => {
+    if (!mapContainer.current) return;
+    const color = settings?.poleColor || '#444444';
+    mapContainer.current.querySelectorAll('.flagpole-stem').forEach((el) => {
+      el.style.background = color;
+    });
+  }, [settings?.poleColor]);
 
   useEffect(() => {
     if (map.current) return;
@@ -361,7 +371,7 @@ export default function MapSection({ settings }) {
         const center = savedPos[country.iso] || country.center;
 
         // Flag on pole — draggable
-        const { wrapper } = buildFlagEl(country);
+        const { wrapper } = buildFlagEl(country, settings?.poleColor);
         const flagMarker = new mapboxgl.Marker({
           element: wrapper,
           anchor: 'center',
