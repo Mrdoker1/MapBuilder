@@ -158,7 +158,6 @@
 
 /* ── Info panel (Russia) ── */
 .info-panel {
-  background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(4px);
   border-radius: 6px;
   padding: 16px 22px;
@@ -189,7 +188,6 @@
 
 /* ── Label panel (draggable text badge for key countries) ── */
 .label-panel {
-  background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(4px);
   border-radius: 6px;
   padding: 6px 10px;
@@ -214,4 +212,51 @@
 .mapboxgl-ctrl-bottom-right {
   right: 10px !important;
   bottom: 10px !important;
+}
+
+/* ── Country list panel (fixed, left side) ── */
+.country-list-panel {
+  position: absolute;
+  top: 64px;
+  left: 64px;
+  z-index: 6;
+  backdrop-filter: blur(6px);
+  border-radius: 10px;
+  padding: 32px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.16);
+  min-width: 200px;
+  pointer-events: none;
+}
+
+.country-list-panel__title {
+  font-family: var(--app-font, system-ui, sans-serif);
+  font-size: 24px;
+  font-weight: 400;
+  color: #111;
+  line-height: 1.35;
+  margin-bottom: 32px;
+}
+
+.country-list-panel__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.country-list-panel__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--app-font, system-ui, sans-serif);
+  font-size: 16px;
+  font-weight: 400;
+  color: #222;
+  line-height: 1.2;
+}
+
+.country-list-panel__item img {
+  flex-shrink: 0;
 }

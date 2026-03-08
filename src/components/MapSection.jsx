@@ -42,7 +42,7 @@ const DEFAULT_POSITIONS = {
   "IN": [74.81624136483242, 23.7921391102129],
   "LT": [23.056789390102722, 56.78850444020182],
   "CN": [92.39522257134144, 36.12581714086795],
-  "__info_panel__": [93.95153926976303, 63.660305446688],
+  "__info_panel__": [75.12371729567397, 62.90472150252157],
   "DE": [11.41403709670746, 53.99920535405738],
   "SA": [46.31554609717719, 26.494911681770702],
   "AE": [55.02415957928318, 24.723367602141494],
@@ -51,16 +51,16 @@ const DEFAULT_POSITIONS = {
   "MY": [113.8637874251387, 3.467210969056765],
   "IQ": [45.45029696744399, 32.47116036226599],
   "KZ": [66.67362604514278, 51.29290820007543],
-  "SY": [40.93968726036408, 37.51792531389995],
-  "RU": [45.70279907502322, 58.11079436849158],
+  "SY": [41.005854669588985, 37.56151924046398],
+  "RU": [44.89892017191215, 57.750039535420484],
   "__label_RU__": [35.07598066336823, 60.12426945716962],
   "__label_DE__": [2.721856966517123, 57.32907147096458],
   "__label_CN__": [83.06980350946509, 42.68201735212193],
 };
 
 const DEFAULT_VIEW = {
-  zoom: 2.465460946401676,
-  center: [62.72200513790429, 44.71419079252851],
+  zoom: 2.634098368635377,
+  center: [38.76131011171185, 39.133802854981155],
 };
 
 const DEFAULT_ATTACHED = {
@@ -116,7 +116,7 @@ function appleEmojiUrl(iso) {
  * exactly like the working text panels. The geo-coordinate = pole base point.
  * The visual flag is rendered via position:absolute going upward from that point.
  */
-function buildFlagEl(country, poleColor) {
+function buildFlagEl(country, poleColor, poleWidth) {
   const large = !!country.label;
   const poleH = large ? 54 : 40;
   const flagW = large ? 44 : 32;
@@ -137,6 +137,7 @@ function buildFlagEl(country, poleColor) {
   stem.className = 'flagpole-stem';
   stem.style.height = `${poleH}px`;
   if (poleColor) stem.style.background = poleColor;
+  if (poleWidth) stem.style.width = `${poleWidth}px`;
 
   const img = document.createElement('img');
   img.className = 'flagpole-flag';
@@ -159,10 +160,11 @@ function LabelPanel({ text }) {
 }
 
 // Synchronous DOM build — Mapbox measures correct size immediately on marker creation
-function buildLabelEl(text) {
+function buildLabelEl(text, opacity = 0.6) {
   const lw = document.createElement('div');
   const panel = document.createElement('div');
   panel.className = 'label-panel';
+  panel.style.background = `rgba(255,255,255,${opacity})`;
   const span = document.createElement('span');
   span.className = 'label-panel__text';
   span.textContent = text;
@@ -171,11 +173,30 @@ function buildLabelEl(text) {
   return lw;
 }
 
-function InfoPanel({ title, subtitle }) {
+function InfoPanel({ title, subtitle, opacity = 0.6 }) {
   return (
-    <div className="info-panel">
+    <div className="info-panel" style={{ background: `rgba(255,255,255,${opacity})` }}>
       <div className="info-panel__title">{title}</div>
       <div className="info-panel__subtitle">{subtitle}</div>
+    </div>
+  );
+}
+
+function CountryListPanel({ opacity = 0.6, visible = true }) {
+  if (!visible) return null;
+  return (
+    <div className="country-list-panel" style={{ background: `rgba(255,255,255,${opacity})` }}>
+      <div className="country-list-panel__title">
+        География присутствия<br />бренда BTAP в мире
+      </div>
+      <ul className="country-list-panel__list">
+        {COUNTRIES.map((c) => (
+          <li key={c.iso} className="country-list-panel__item">
+            <img src={appleEmojiUrl(c.iso)} width={20} height={20} alt={c.name} draggable={false} />
+            <span>{c.name}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -199,6 +220,21 @@ export default function MapSection({ settings }) {
     markersRef.current.forEach(marker => marker.setDraggable(!locked));
   }, [settings?.zoomLocked]);
 
+  // Live-update country fill color and opacity
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !m.isStyleLoaded()) return;
+    const color = settings?.countryFillColor ?? BRAND_COLOR;
+    const opacity = settings?.countryFillOpacity ?? 0.35;
+    if (m.getLayer('brand-countries-fill')) {
+      m.setPaintProperty('brand-countries-fill', 'fill-color', color);
+      m.setPaintProperty('brand-countries-fill', 'fill-opacity', opacity);
+    }
+    if (m.getLayer('brand-countries-line')) {
+      m.setPaintProperty('brand-countries-line', 'line-color', color);
+    }
+  }, [settings?.countryFillColor, settings?.countryFillOpacity]);
+
   // Live-update pole color without rebuilding markers
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -207,6 +243,27 @@ export default function MapSection({ settings }) {
       el.style.background = color;
     });
   }, [settings?.poleColor]);
+
+  // Live-update pole width
+  useEffect(() => {
+    if (!mapContainer.current) return;
+    const width = settings?.poleWidth ?? 2;
+    mapContainer.current.querySelectorAll('.flagpole-stem').forEach((el) => {
+      el.style.width = `${width}px`;
+    });
+  }, [settings?.poleWidth]);
+
+  // Live-update label panel opacity
+  useEffect(() => {
+    if (!mapContainer.current) return;
+    const opacity = settings?.labelOpacity ?? 0.6;
+    mapContainer.current.querySelectorAll('.label-panel, .info-panel').forEach((el) => {
+      el.style.background = `rgba(255,255,255,${opacity})`;
+    });
+    document.querySelectorAll('.country-list-panel').forEach((el) => {
+      el.style.background = `rgba(255,255,255,${opacity})`;
+    });
+  }, [settings?.labelOpacity]);
 
   useEffect(() => {
     if (map.current) return;
@@ -268,8 +325,8 @@ export default function MapSection({ settings }) {
         type: 'fill',
         source: 'country-boundaries',
         paint: {
-          'fill-color': BRAND_COLOR,
-          'fill-opacity': 0.35,
+          'fill-color': settings?.countryFillColor ?? BRAND_COLOR,
+          'fill-opacity': settings?.countryFillOpacity ?? 0.35,
           'fill-antialias': true,
         },
       }, firstSymbolId);
@@ -280,7 +337,7 @@ export default function MapSection({ settings }) {
         type: 'line',
         source: 'country-boundaries',
         paint: {
-          'line-color': BRAND_COLOR,
+          'line-color': settings?.countryFillColor ?? BRAND_COLOR,
           'line-width': 1.5,
           'line-opacity': 0.9,
         },
@@ -297,6 +354,7 @@ export default function MapSection({ settings }) {
           <InfoPanel
             title="Gettzap LLC - Россия"
             subtitle="Эксклюзивный дистрибьютер на территории Российской Федерации"
+            opacity={settings?.labelOpacity ?? 0.6}
           />
         );
         const panelMarker = new mapboxgl.Marker({ element: wrapper, anchor: 'center', draggable: !settings?.zoomLocked })
@@ -371,7 +429,7 @@ export default function MapSection({ settings }) {
         const center = savedPos[country.iso] || country.center;
 
         // Flag on pole — draggable
-        const { wrapper } = buildFlagEl(country, settings?.poleColor);
+        const { wrapper } = buildFlagEl(country, settings?.poleColor, settings?.poleWidth ?? 2);
         const flagMarker = new mapboxgl.Marker({
           element: wrapper,
           anchor: 'center',
@@ -404,7 +462,7 @@ export default function MapSection({ settings }) {
         if (country.label) {
           const labelKey = `__label_${country.iso}__`;
           const labelPos = savedPos[labelKey] || country.labelCenter || country.center;
-          const lw = buildLabelEl(country.label);
+          const lw = buildLabelEl(country.label, settings?.labelOpacity ?? 0.6);
           const labelMarker = new mapboxgl.Marker({
             element: lw,
             anchor: 'center',
@@ -487,6 +545,7 @@ export default function MapSection({ settings }) {
       <div ref={mapContainer} className="map-container" />
       {/* Transparent overlay — blocks all pointer events in presentation mode */}
       <div className="map-lock-overlay" style={{ pointerEvents: settings?.zoomLocked ? 'all' : 'none' }} />
+      <CountryListPanel opacity={settings?.labelOpacity ?? 0.6} visible={settings?.showCountryList ?? true} />
     </section>
   );
 }

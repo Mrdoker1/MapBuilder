@@ -31,7 +31,12 @@ const DEFAULT_SETTINGS = {
   font: 'Neo Sans Pro',
   zoomLocked: false,
   showBlobs: false,
-  poleColor: '#444444',
+  poleColor: '#4a4a4a',
+  poleWidth: 3,
+  labelOpacity: 0.8,
+  showCountryList: true,
+  countryFillColor: '#008528',
+  countryFillOpacity: 0.25,
 };
 
 function loadSettings() {
@@ -60,7 +65,7 @@ export default function App() {
 
   function exportConfig() {
     const data = {
-      settings: JSON.parse(localStorage.getItem('mapSettings') || '{}'),
+      settings,
       positions: JSON.parse(localStorage.getItem('mapFlagPositions') || '{}'),
       view: JSON.parse(localStorage.getItem('mapView') || 'null'),
       attached: JSON.parse(localStorage.getItem('mapLabelAttached') || '{}'),
@@ -81,7 +86,10 @@ export default function App() {
     reader.onload = (ev) => {
       try {
         const data = JSON.parse(ev.target.result);
-        if (data.settings)  localStorage.setItem('mapSettings',      JSON.stringify(data.settings));
+        if (data.settings)  {
+          const merged = { ...DEFAULT_SETTINGS, ...data.settings };
+          localStorage.setItem('mapSettings', JSON.stringify(merged));
+        }
         if (data.positions) localStorage.setItem('mapFlagPositions', JSON.stringify(data.positions));
         if (data.view)      localStorage.setItem('mapView',          JSON.stringify(data.view));
         if (data.attached)  localStorage.setItem('mapLabelAttached', JSON.stringify(data.attached));
@@ -125,31 +133,29 @@ export default function App() {
         closeOnEscape={false}
         title={<Text fw={700} size="lg" c="white">Настройки карты</Text>}
         centered
+        size="md"
         overlayProps={{ backgroundOpacity: 0.4, blur: 4 }}
         styles={{
           root: { zIndex: 9999 },
           content: { background: '#0f1117', border: '1px solid rgba(255,255,255,0.1)' },
-          header: { background: '#0f1117', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: 12 },
+          header: { background: '#0f1117', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: 8 },
+          body: { paddingTop: 10, paddingBottom: 12 },
           close: { color: '#aaa' },
         }}
       >
-        <Stack gap="md" py="xs">
-          <Badge color="green" variant="light" size="sm" w="fit-content">
-            Шрифт
-          </Badge>
-
+        <Stack gap="xs">
+          {/* Шрифт */}
           <Select
-            label="Шрифт интерфейса"
-            description="Google Fonts или кастомный Neo Sans Pro"
+            label="Шрифт"
             data={FONT_OPTIONS}
             value={settings.font}
             onChange={(val) => setSettings((p) => ({ ...p, font: val }))}
             searchable
-            maxDropdownHeight={260}
+            size="xs"
+            maxDropdownHeight={220}
             styles={{
-              label: { color: '#e0e0e0', fontWeight: 600, marginBottom: 4 },
-              description: { color: 'rgba(255,255,255,0.45)', fontSize: 12, marginBottom: 6 },
-              input: { background: '#1a1d27', border: '1px solid rgba(255,255,255,0.15)', color: '#fff' },
+              label: { color: '#aaa', fontSize: 11, marginBottom: 3 },
+              input: { background: '#1a1d27', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', fontSize: 13 },
               dropdown: { background: '#1a1d27', border: '1px solid rgba(255,255,255,0.12)' },
               option: { color: '#e0e0e0', '&[data-selected]': { background: '#04882C' }, '&[data-hovered]': { background: 'rgba(255,255,255,0.07)' } },
             }}
@@ -157,106 +163,114 @@ export default function App() {
 
           <Divider color="rgba(255,255,255,0.08)" />
 
-          <Badge color="green" variant="light" size="sm" w="fit-content">
-            Флаги стран
-          </Badge>
+          {/* Флаги стран */}
+          <Text size="xs" c="rgba(255,255,255,0.4)" tt="uppercase" fw={600} lts={1}>Флаги стран</Text>
 
           <Switch
-            label="Круглые флаги"
-            description="Отображать флаги в круглом контейнере"
-            checked={settings.roundedFlags}
-            onChange={() => toggle('roundedFlags')}
+            label="Панель со списком стран"
+            checked={settings.showCountryList ?? true}
+            onChange={() => toggle('showCountryList')}
             color="green"
-            styles={{
-              label: { color: '#e0e0e0', fontWeight: 600 },
-              description: { color: 'rgba(255,255,255,0.45)', fontSize: 12 },
-            }}
+            size="sm"
+            styles={{ label: { color: '#e0e0e0', fontSize: 13 } }}
           />
 
-          <div>
-            <Text size="sm" fw={600} c="#e0e0e0" mb={4}>Цвет флагштока</Text>
-            <Text size="xs" c="rgba(255,255,255,0.45)" mb={6}>Выберите цвет шеста флага</Text>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Цвет + толщина флагштока в одну строку */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+              <Text size="xs" c="#aaa">Флагшток</Text>
               <input
                 type="color"
                 value={settings.poleColor ?? '#444444'}
                 onChange={(e) => setSettings((p) => ({ ...p, poleColor: e.target.value }))}
-                style={{ width: 40, height: 32, border: 'none', borderRadius: 6, cursor: 'pointer', background: 'none', padding: 0 }}
+                style={{ width: 30, height: 26, border: 'none', borderRadius: 4, cursor: 'pointer', padding: 0 }}
               />
-              <Text size="sm" c="#aaa">{settings.poleColor ?? '#444444'}</Text>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
+              <Text size="xs" c="#aaa" style={{ whiteSpace: 'nowrap' }}>Толщина</Text>
+              <input
+                type="range" min={1} max={6} step={0.5}
+                value={settings.poleWidth ?? 2}
+                onChange={(e) => setSettings((p) => ({ ...p, poleWidth: parseFloat(e.target.value) }))}
+                style={{ flex: 1, accentColor: '#04882C' }}
+              />
+              <Text size="xs" c="#aaa" style={{ minWidth: 28 }}>{settings.poleWidth ?? 2}px</Text>
+            </div>
+          </div>
+
+          {/* Прозрачность */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Text size="xs" c="#aaa" style={{ whiteSpace: 'nowrap' }}>Прозрачность плашек</Text>
+            <input
+              type="range" min={0} max={1} step={0.05}
+              value={settings.labelOpacity ?? 0.6}
+              onChange={(e) => setSettings((p) => ({ ...p, labelOpacity: parseFloat(e.target.value) }))}
+              style={{ flex: 1, accentColor: '#04882C' }}
+            />
+            <Text size="xs" c="#aaa" style={{ minWidth: 34 }}>{Math.round((settings.labelOpacity ?? 0.6) * 100)}%</Text>
+          </div>
+
+          <Divider color="rgba(255,255,255,0.08)" />
+
+          {/* Страны на карте */}
+          <Text size="xs" c="rgba(255,255,255,0.4)" tt="uppercase" fw={600} lts={1}>Страны</Text>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+              <Text size="xs" c="#aaa">Цвет</Text>
+              <input
+                type="color"
+                value={settings.countryFillColor ?? '#04882C'}
+                onChange={(e) => setSettings((p) => ({ ...p, countryFillColor: e.target.value }))}
+                style={{ width: 30, height: 26, border: 'none', borderRadius: 4, cursor: 'pointer', padding: 0 }}
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
+              <Text size="xs" c="#aaa" style={{ whiteSpace: 'nowrap' }}>Прозрачность</Text>
+              <input
+                type="range" min={0} max={1} step={0.05}
+                value={settings.countryFillOpacity ?? 0.35}
+                onChange={(e) => setSettings((p) => ({ ...p, countryFillOpacity: parseFloat(e.target.value) }))}
+                style={{ flex: 1, accentColor: '#04882C' }}
+              />
+              <Text size="xs" c="#aaa" style={{ minWidth: 34 }}>{Math.round((settings.countryFillOpacity ?? 0.35) * 100)}%</Text>
             </div>
           </div>
 
           <Divider color="rgba(255,255,255,0.08)" />
 
-          <Badge color="green" variant="light" size="sm" w="fit-content">
-            Навигация
-          </Badge>
-
+          {/* Навигация */}
           <Switch
             label="Режим презентации"
-            description="Блокирует зум, перемещение карты и перетаскивание флагов"
+            description="Блокирует зум, перемещение и перетаскивание"
             checked={settings.zoomLocked}
             onChange={() => toggle('zoomLocked')}
             color="green"
+            size="sm"
             styles={{
-              label: { color: '#e0e0e0', fontWeight: 600 },
-              description: { color: 'rgba(255,255,255,0.45)', fontSize: 12 },
+              label: { color: '#e0e0e0', fontSize: 13 },
+              description: { color: 'rgba(255,255,255,0.35)', fontSize: 11 },
             }}
           />
+
+          <Divider color="rgba(255,255,255,0.08)" />
+
+          {/* Конфигурация */}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Button variant="light" color="green" size="xs" style={{ flex: 1 }} onClick={exportConfig}>
+              Экспорт JSON
+            </Button>
+            <Button variant="light" color="blue" size="xs" style={{ flex: 1 }} onClick={() => importInputRef.current?.click()}>
+              Импорт JSON
+            </Button>
+            <Button variant="subtle" color="red" size="xs" style={{ flex: 1 }}
+              onClick={() => { localStorage.removeItem('mapFlagPositions'); localStorage.removeItem('mapView'); localStorage.removeItem('mapLabelAttached'); window.location.reload(); }}>
+              Сбросить
+            </Button>
+          </div>
+
+          <input ref={importInputRef} type="file" accept=".json" style={{ display: 'none' }} onChange={importConfig} />
         </Stack>
-
-        <Divider mt="lg" mb="sm" color="rgba(255,255,255,0.08)" />
-
-        <Badge color="blue" variant="light" size="sm" w="fit-content" mb="xs">
-          Конфигурация
-        </Badge>
-
-        <Stack gap="xs">
-          <Button
-            variant="light"
-            color="green"
-            size="xs"
-            fullWidth
-            onClick={exportConfig}
-          >
-            Экспортировать настройки (JSON)
-          </Button>
-
-          <input
-            ref={importInputRef}
-            type="file"
-            accept=".json"
-            style={{ display: 'none' }}
-            onChange={importConfig}
-          />
-          <Button
-            variant="light"
-            color="blue"
-            size="xs"
-            fullWidth
-            onClick={() => importInputRef.current?.click()}
-          >
-            Импортировать настройки
-          </Button>
-
-          <Button
-            variant="subtle"
-            color="red"
-            size="xs"
-            fullWidth
-            onClick={() => { localStorage.removeItem('mapFlagPositions'); localStorage.removeItem('mapView'); localStorage.removeItem('mapLabelAttached'); window.location.reload(); }}
-          >
-            Сбросить позиции флагов
-          </Button>
-        </Stack>
-        <Text size="xs" c="dimmed" ta="center">
-          Нажмите{' '}
-          <kbd style={{ background: 'rgba(255,255,255,0.1)', padding: '1px 6px', borderRadius: 4, color: '#fff' }}>
-            ESC
-          </kbd>{' '}
-          чтобы закрыть
-        </Text>
       </Modal>
     </MantineProvider>
   );
