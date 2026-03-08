@@ -11,7 +11,7 @@ const BRAND_COLOR = '#04882C';
 
 // Countries to highlight
 const COUNTRIES = [
-  { iso: 'RU', name: 'Россия',            label: 'GETTZAP - BTAP', blob: 'xl', center: [37.6,  55.75], labelCenter: [42,   53.5] },
+  { iso: 'RU', name: 'Россия',            label: 'Продажи', blob: 'xl', center: [37.6,  55.75], labelCenter: [42,   53.5] },
   { iso: 'CN', name: 'Китай',             label: 'Производство',  blob: 'xl', center: [116.4, 39.9 ], labelCenter: [121,  37.5] },
   { iso: 'TR', name: 'Турция',            label: null,            blob: 'md', center: [32.9,  39.9 ] },
   { iso: 'IN', name: 'Индия',             label: null,            blob: 'md', center: [77.2,  28.6 ] },
@@ -318,8 +318,8 @@ export default function MapSection({ settings }) {
       }
 
       // Compute where label center should be relative to a flag (in geo coords)
-      // Large flags: top-right corner of label → top-left corner of flag image
-      // Small flags: old behaviour (label centred at mid-pole, to the left)
+      // Large flags: label centred vertically on the flag emoji, +4px down, close to pole
+      // Small flags: original behaviour (label centred at mid-pole, to the left)
       function syncAttachedLabel(labelIso) {
         const flagIso = attachedTo[labelIso];
         if (!flagIso || !flagMarkersMap[flagIso] || !labelMarkersMap[labelIso]) return;
@@ -330,11 +330,12 @@ export default function MapSection({ settings }) {
         const labelH = el.offsetHeight;
         let x, y;
         if (isLargeFlag(flagIso)) {
-          // right edge of label aligns with left edge of flag image (pole left = fp.x)
-          // top edge of label aligns with top of flag image (top = fp.y - poleH - 5)
-          const extraDown = flagIso === 'DE' ? 20 : flagIso === 'CN' ? 6 : 4;
-          x = fp.x - labelW / 2 - ATTACH_GAP_PX;
-          y = fp.y - poleH - 5 + labelH / 2 + extraDown;
+          // flag image: top = fp.y - poleH - 5, height = 44px → centre = fp.y - poleH + 17
+          // label centre Y aligns with flag image centre, shifted 4px down
+          const flagImgCenterY = fp.y - poleH - 5 + 22; // 44/2 = 22
+          const extraDown = flagIso === 'DE' ? 12 : flagIso === 'RU' ? -2 : flagIso === 'CN' ? -2 : 0;
+          x = fp.x - labelW / 2 - 4;   // 4px gap to pole
+          y = flagImgCenterY + 4 + extraDown;
         } else {
           // original positioning: label centred vertically at mid-pole
           x = fp.x - labelW / 2 - ATTACH_GAP_PX;
