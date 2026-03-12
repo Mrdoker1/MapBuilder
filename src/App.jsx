@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { MantineProvider, Modal, Switch, Stack, Text, Divider, Badge, Select, Button } from '@mantine/core';
 import '@mantine/core/styles.css';
 import MapSection from './components/MapSection';
+import MoscowPage from './components/MoscowPage';
 
 const GOOGLE_FONTS = [
   'Inter',
@@ -61,7 +62,14 @@ function loadGoogleFont(family) {
 export default function App() {
   const [settings, setSettings] = useState(loadSettings);
   const [opened, setOpened] = useState(false);
+  const [hash, setHash] = useState(window.location.hash);
   const importInputRef = useRef(null);
+
+  useEffect(() => {
+    const handler = () => setHash(window.location.hash);
+    window.addEventListener('hashchange', handler);
+    return () => window.removeEventListener('hashchange', handler);
+  }, []);
 
   function exportConfig() {
     const data = {
@@ -123,9 +131,11 @@ export default function App() {
   const toggle = (key) =>
     setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
 
+  const isMoscow = hash === '#/moscow';
+
   return (
     <MantineProvider>
-      <MapSection settings={settings} />
+      {isMoscow ? <MoscowPage settings={settings} /> : <MapSection settings={settings} />}
 
       <Modal
         opened={opened}
